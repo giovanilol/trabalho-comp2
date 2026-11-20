@@ -1,4 +1,3 @@
-
 import math
 import plotly.graph_objects as go
 import streamlit as st
@@ -14,7 +13,7 @@ dimensao = st.radio(
 if dimensao == "ℝ³":
 
     xmax = st.number_input(
-        "Tamanho do sólido em X",
+        "Tamanho do sólido em X (-X a +X)",
         min_value=0.1,
         max_value=100.0,
         value=10.0,
@@ -22,7 +21,7 @@ if dimensao == "ℝ³":
     )
 
     ymax = st.number_input(
-        "Tamanho do sólido em Y",
+        "Tamanho do sólido em Y (-Y a +Y)",
         min_value=0.1,
         max_value=100.0,
         value=10.0,
@@ -45,38 +44,71 @@ if dimensao == "ℝ³":
 
     class Solido:
 
-        def __init__(self, funcao, xmax, ymax):
-            self.funcao = funcao
+        def __init__(self, func_z, func_t, xmax, ymax):
+            # Substitui ^ por ** para evitar erro de sintaxe matemática
+            self.func_z = func_z.replace("^", "**")
+            self.func_t = func_t.replace("^", "**")
             self.xmax = xmax
             self.ymax = ymax
 
         def plotar(self):
-
             x = []
             y = []
             z = []
             temperatura = []
 
+            # Ambiente com funções matemáticas diretas (sem precisar digitar math.)
+            ambiente_math = {
+                "math": math,
+                "sin": math.sin,
+                "cos": math.cos,
+                "tan": math.tan,
+                "sqrt": math.sqrt,
+                "exp": math.exp,
+                "log": math.log,
+                "abs": abs,
+                "pi": math.pi,
+                "e": math.e
+            }
+
             for i in range(100):
                 for j in range(100):
+                    # Varia de -xmax até +xmax (para ver o sólido inteiro)
+                    xi = -self.xmax + (2 * self.xmax * i / 99)
+                    yi = -self.ymax + (2 * self.ymax * j / 99)
 
-                    xi = i * self.xmax / 99
-                    yi = j * self.ymax / 99
+                    try:
+                        # Atualiza x e y no dicionário
+                        ambiente_math["x"] = xi
+                        ambiente_math["y"] = yi
 
-                    zi = eval(
-                        self.funcao,
-                        {"x": xi, "y": yi, "math": math}
-                    )
+                        zi = eval(self.func_z, {"__builtins__": {}}, ambiente_math)
 
-                    ti = eval(
-                        funcao_temperatura,
-                        {"x": xi, "y": yi, "z": zi, "math": math}
-                    )
+                        # Ignora se o resultado for complexo (ex: raiz de negativo com **) ou infinito
+                        if isinstance(zi, complex) or math.isnan(zi) or math.isinf(zi):
+                            continue
 
-                    x.append(xi)
-                    y.append(yi)
-                    z.append(zi)
-                    temperatura.append(ti)
+                        ambiente_math["z"] = zi
+                        ti = eval(self.func_t, {"__builtins__": {}}, ambiente_math)
+
+                        if isinstance(ti, complex) or math.isnan(ti) or math.isinf(ti):
+                            continue
+
+                        x.append(float(xi))
+                        y.append(float(yi))
+                        z.append(float(zi))
+                        temperatura.append(float(ti))
+
+                    except (ValueError, ZeroDivisionError, OverflowError):
+                        # Pula pontos fora do domínio (ex: divisão por zero ou log de negativo)
+                        continue
+                    except Exception as erro:
+                        st.error(f"Erro na expressão digitada: {erro}")
+                        return
+
+            if not x:
+                st.warning("Nenhum ponto válido foi gerado nesse intervalo. Verifique o domínio da função.")
+                return
 
             fig = go.Figure(
                 data=[go.Scatter3d(
@@ -93,8 +125,15 @@ if dimensao == "ℝ³":
                 )]
             )
 
+            fig.update_layout(
+                scene=dict(
+                    xaxis_title="X",
+                    yaxis_title="Y",
+                    zaxis_title="Z"
+                )
+            )
+
             st.plotly_chart(fig, use_container_width=True)
 
-    solido = Solido(funcao_solido, xmax, ymax)
-
-    solido.plotar()
+    meu_solido = Solido(funcao_solido, funcao_temperatura, xmax, ymax)
+    meu_solido.plotar()
