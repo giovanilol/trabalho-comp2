@@ -71,11 +71,11 @@ if dimensao == "ℝ³":
                 "e": math.e
             }
 
-            for i in range(100):
-                for j in range(100):
+            for i in range(1000):
+                for j in range(1000):
                     # Varia de -xmax até +xmax (para ver o sólido inteiro)
-                    xi = -self.xmax + (2 * self.xmax * i / 99)
-                    yi = -self.ymax + (2 * self.ymax * j / 99)
+                    xi = -self.xmax + (2 * self.xmax * i / 999)
+                    yi = -self.ymax + (2 * self.ymax * j / 999)
 
                     try:
                         # Atualiza x e y no dicionário
