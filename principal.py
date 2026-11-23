@@ -45,7 +45,7 @@ if dimensao == "ℝ³":
     class Solido:
 
         def __init__(self, func_z, func_t, xmax, ymax):
-            # Substitui ^ por ** para evitar erro de sintaxe matemática
+            # troca ^ para  **
             self.func_z = func_z.replace("^", "**")
             self.func_t = func_t.replace("^", "**")
             self.xmax = xmax
@@ -57,7 +57,7 @@ if dimensao == "ℝ³":
             z = []
             temperatura = []
 
-            # Ambiente com funções matemáticas diretas (sem precisar digitar math.)
+            
             ambiente_math = {
                 "math": math,
                 "sin": math.sin,
@@ -71,25 +71,25 @@ if dimensao == "ℝ³":
                 "e": math.e
             }
 
-            for i in range(1000):
-                for j in range(1000):
-                    # Varia de -xmax até +xmax (para ver o sólido inteiro)
-                    xi = -self.xmax + (2 * self.xmax * i / 999)
-                    yi = -self.ymax + (2 * self.ymax * j / 999)
+            for i in range(100):
+                for j in range(100):
+                    
+                    xi = -self.xmax + (2 * self.xmax * i / 99)
+                    yi = -self.ymax + (2 * self.ymax * j / 99)
 
                     try:
-                        # Atualiza x e y no dicionário
+                    
                         ambiente_math["x"] = xi
                         ambiente_math["y"] = yi
 
-                        zi = eval(self.func_z, {"__builtins__": {}}, ambiente_math)
+                        zi = eval(self.func_z, ambiente_math)
 
-                        # Ignora se o resultado for complexo (ex: raiz de negativo com **) ou infinito
+                        # caso de numero complexo
                         if isinstance(zi, complex) or math.isnan(zi) or math.isinf(zi):
                             continue
 
                         ambiente_math["z"] = zi
-                        ti = eval(self.func_t, {"__builtins__": {}}, ambiente_math)
+                        ti = eval(self.func_t, ambiente_math)
 
                         if isinstance(ti, complex) or math.isnan(ti) or math.isinf(ti):
                             continue
@@ -100,7 +100,7 @@ if dimensao == "ℝ³":
                         temperatura.append(float(ti))
 
                     except (ValueError, ZeroDivisionError, OverflowError):
-                        # Pula pontos fora do domínio (ex: divisão por zero ou log de negativo)
+                        # divsao por zero e log de negativo e raiz de negativo
                         continue
                     except Exception as erro:
                         st.error(f"Erro na expressão digitada: {erro}")
